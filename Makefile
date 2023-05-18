@@ -1,5 +1,5 @@
 test:
-	go test -v -race ./...
+	go test -v -race -count 10 ./...
 
 build:
 	go build -v -o ./bin/anti-bruteforce ./cmd/anti-bruteforce/
