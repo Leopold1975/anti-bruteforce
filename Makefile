@@ -11,3 +11,4 @@ run: build
 
 lint: 
 	golangci-lint run ./...
+
