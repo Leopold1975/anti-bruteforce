@@ -31,10 +31,12 @@ func main() {
 	logg := logger.New(cfg)
 	service := redislimiter.New(cfg)
 
-	server := server.New(service, cfg)
+	server := server.New(service, cfg, logg)
+
+	ctxStop := context.Background()
 	go func() {
 		<-ctx.Done()
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+		ctx, cancel := context.WithTimeout(ctxStop, time.Second*3)
 		defer cancel()
 
 		logg.Info("redis is shutting down...")
@@ -45,7 +47,7 @@ func main() {
 
 	go func() {
 		<-ctx.Done()
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+		ctx, cancel := context.WithTimeout(ctxStop, time.Second*3)
 		defer cancel()
 
 		logg.Info("server is shutting down...")

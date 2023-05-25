@@ -94,6 +94,11 @@ var testCases = []TestCase{
 		ip:       "172.162.31.2",
 		expected: false,
 	},
+	{
+		network:  "44.44.44.234/24",
+		ip:       "44.44.44.2",
+		expected: true,
+	},
 }
 
 var errorCases = []TestCase{

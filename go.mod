@@ -3,6 +3,7 @@ module github.com/Pos1t1veM1ndset/anti-bruteforce
 go 1.19
 
 require (
+	github.com/go-redis/redismock/v9 v9.0.3
 	github.com/ilyakaznacheev/cleanenv v1.4.2
 	github.com/redis/go-redis/v9 v9.0.4
 	github.com/stretchr/testify v1.8.2

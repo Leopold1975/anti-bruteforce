@@ -7,17 +7,18 @@ import (
 
 	"github.com/Pos1t1veM1ndset/anti-bruteforce/internal/app"
 	"github.com/Pos1t1veM1ndset/anti-bruteforce/internal/config"
+	"go.uber.org/zap"
 )
 
 type Server struct {
 	server *http.Server
 }
 
-func New(app app.RequestValidator, cfg config.Config) *Server {
+func New(app app.RequestValidator, cfg config.Config, logg zap.SugaredLogger) *Server {
 	return &Server{
 		server: &http.Server{
 			Addr:              cfg.Server.Host + cfg.Server.Port,
-			Handler:           newHandler(app),
+			Handler:           loggingMiddleware(newHandler(app), logg),
 			ReadHeaderTimeout: time.Second * 3,
 		},
 	}

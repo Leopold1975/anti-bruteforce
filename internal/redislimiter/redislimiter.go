@@ -22,6 +22,17 @@ type ABFService struct {
 	limiter Limiter
 }
 
+func NewServiceMock(rdb *redis.Client, cfg config.Config) *ABFService {
+	return &ABFService{
+		rdb: rdb,
+		limiter: Limiter{
+			N: cfg.Limiter.N,
+			M: cfg.Limiter.M,
+			K: cfg.Limiter.K,
+		},
+	}
+}
+
 func New(cfg config.Config) *ABFService {
 	return &ABFService{
 		rdb: redis.NewClient(&redis.Options{
@@ -42,12 +53,12 @@ func (a *ABFService) Shutdown(ctx context.Context) error {
 }
 
 func (a *ABFService) TryAuth(ctx context.Context, r app.Request) (bool, error) {
-	mem, err := a.rdb.SMembersMap(ctx, "blacklist").Result()
+	mem, err := a.rdb.SMembers(ctx, "blacklist").Result()
 	if err != nil {
 		return false, err
 	}
-	for k := range mem {
-		ok, err := ip.BelongsToNetwork(k, r.IP)
+	for _, v := range mem {
+		ok, err := ip.BelongsToNetwork(v, r.IP)
 		if err != nil {
 			return false, err
 		}
@@ -56,12 +67,12 @@ func (a *ABFService) TryAuth(ctx context.Context, r app.Request) (bool, error) {
 		}
 	}
 
-	mem, err = a.rdb.SMembersMap(ctx, "whitelist").Result()
+	mem, err = a.rdb.SMembers(ctx, "whitelist").Result()
 	if err != nil {
 		return false, err
 	}
-	for k := range mem {
-		ok, err := ip.BelongsToNetwork(k, r.IP)
+	for _, v := range mem {
+		ok, err := ip.BelongsToNetwork(v, r.IP)
 		if err != nil {
 			return false, err
 		}
@@ -100,6 +111,7 @@ func (a *ABFService) TryAuth(ctx context.Context, r app.Request) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
 	return a.limiter.CheckRateLimitLogin(currentLogin) && a.limiter.CheckRateLimitPassword(currentPassword) &&
 			a.limiter.CheckRateLimitIP(currentIP),
 		nil

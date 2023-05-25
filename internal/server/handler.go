@@ -3,8 +3,8 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"time"
 
@@ -21,6 +21,10 @@ func newHandler(app app.RequestValidator) *Handler {
 		app:    app,
 		router: make(map[string]http.HandlerFunc),
 	}
+}
+
+type Error struct {
+	Err string `json:"error"`
 }
 
 func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -64,26 +68,61 @@ func getNetwork(r *http.Request) (app.Network, error) {
 	return an, nil
 }
 
+func sendError(w http.ResponseWriter, err error) {
+	b, err := json.Marshal(Error{err.Error()})
+	if err != nil {
+		w.Write([]byte(fmt.Sprintf(`{
+			"error": "%s"
+		}
+		`, err.Error()),
+		))
+		return
+	}
+	w.Write(b)
+}
+
 func (h Handler) TryAuth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	ctx, cancel := context.WithTimeout(r.Context(), time.Second*3)
 	defer cancel()
 
 	ar, err := getReq(r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		log.Println(err)
+		b, err := json.Marshal(Error{err.Error()})
+		if err != nil {
+			w.Write([]byte(fmt.Sprintf(`{
+				"error": "%s"
+			}
+			`, err.Error()),
+			))
+			return
+		}
+		w.Write(b)
+		return
+	}
+	if ar.IP == "" || ar.Login == "" {
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	ok, err := h.app.TryAuth(ctx, ar)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		log.Println(err)
+		b, err := json.Marshal(Error{err.Error()})
+		if err != nil {
+			w.Write([]byte(fmt.Sprintf(`{
+				"error": "%s"
+			}
+			`, err.Error()),
+			))
+			return
+		}
+		w.Write(b)
 		return
 	}
 	if !ok {
@@ -106,38 +145,34 @@ func (h Handler) Whitelist(w http.ResponseWriter, r *http.Request) {
 func (h Handler) addToWhite(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	ctx, cancel := context.WithTimeout(r.Context(), time.Second*3)
 	defer cancel()
 
 	an, err := getNetwork(r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		log.Println(err)
-		return
+		sendError(w, err)
 	}
 	if err = h.app.AddToWhitelist(ctx, an); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Println(err)
-		return
+		sendError(w, err)
 	}
 }
 
 func (h Handler) removeFromWhite(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	ctx, cancel := context.WithTimeout(r.Context(), time.Second*3)
 	defer cancel()
 
 	an, err := getNetwork(r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		log.Println(err)
-		return
+		sendError(w, err)
 	}
 	if err = h.app.RemoveFromWhitelist(ctx, an); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Println(err)
-		return
+		sendError(w, err)
 	}
 }
 
@@ -156,38 +191,34 @@ func (h Handler) Blacklist(w http.ResponseWriter, r *http.Request) {
 func (h Handler) addToBlack(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	ctx, cancel := context.WithTimeout(r.Context(), time.Second*3)
 	defer cancel()
 
 	an, err := getNetwork(r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		log.Println(err)
-		return
+		sendError(w, err)
 	}
 	if err = h.app.AddToBlacklist(ctx, an); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Println(err)
-		return
+		sendError(w, err)
 	}
 }
 
 func (h Handler) removeFromBlack(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	ctx, cancel := context.WithTimeout(r.Context(), time.Second*3)
 	defer cancel()
 
 	an, err := getNetwork(r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		log.Println(err)
-		return
+		sendError(w, err)
 	}
 	if err = h.app.RemoveFromBlacklist(ctx, an); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Println(err)
-		return
+		sendError(w, err)
 	}
 }
 
@@ -198,19 +229,17 @@ func (h Handler) Reset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	ctx, cancel := context.WithTimeout(r.Context(), time.Second*3)
 	defer cancel()
 
 	ar, err := getReq(r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		log.Println(err)
-		return
+		sendError(w, err)
 	}
 
 	if err = h.app.ResetBuckets(ctx, ar.Login, ar.IP); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Println(err)
-		return
+		sendError(w, err)
 	}
 }
