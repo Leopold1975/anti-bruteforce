@@ -1,0 +1,46 @@
+POST http://localhost:5050/try HTTP/1.1
+
+{  
+        "login":  "login",
+        "password":  "password",
+        "ip":  "44.44.44.2"
+}
+
+###
+GET http://localhost:5050/ HTTP/1.1
+
+###
+POST http://localhost:5050/whitelist HTTP/1.1
+
+{  
+        "network":  "44.44.44.2/24"
+}
+
+###
+DELETE  http://localhost:5050/whitelist HTTP/1.1
+
+{  
+        "network":  "44.44.44.2/24"
+}
+###
+POST http://localhost:5050/blacklist HTTP/1.1
+
+{  
+        "network":  "33.33.33.33/24"
+}
+
+###
+DELETE  http://localhost:5050/blacklist HTTP/1.1
+
+{  
+        "network":  "33.33.33.33/24"
+}
+
+###
+POST http://localhost:5050/reset HTTP/1.1
+
+{  
+        "login":  "login",
+        "password":  "password",
+        "ip":  "33.33.33.33"
+}

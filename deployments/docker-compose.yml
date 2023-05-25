@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+  redis_db:
+    image: 'redis:alpine3.18'
+    container_name: 'redis_db'
+    ports:
+      - '6379:6379'

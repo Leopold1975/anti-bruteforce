@@ -1,0 +1,18 @@
+[logger]
+level = "DEBUG"
+out = ["logs/log.log"]
+out_err = ["logs/log_err.log"]
+
+[redis]
+addr = "localhost:6379"
+password = ""
+db = 0
+
+[limiter]
+n = 10
+m = 100
+k = 100
+
+[server]
+host = "localhost"
+port = ":5050"
