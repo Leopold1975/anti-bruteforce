@@ -6,3 +6,13 @@ services:
     container_name: 'redis_db'
     ports:
       - '6379:6379'
+  abf_service:
+    ports: 
+      - '5050:5050'
+    build:
+      context: ./..
+      dockerfile: ./Dockerfile
+    depends_on:
+      - redis_db
+    links: 
+      - redis_db

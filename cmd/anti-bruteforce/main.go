@@ -56,7 +56,7 @@ func main() {
 		}
 	}()
 
-	logg.Info("service stated...")
+	logg.Infof("service stated at %s...", cfg.Server.Host+cfg.Server.Port)
 	if err := server.Start(ctx); err != nil {
 		logg.Error(err)
 		cancel()

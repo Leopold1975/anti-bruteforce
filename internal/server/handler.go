@@ -112,7 +112,7 @@ func (h Handler) TryAuth(w http.ResponseWriter, r *http.Request) {
 
 	ok, err := h.app.TryAuth(ctx, ar)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
 		b, err := json.Marshal(Error{err.Error()})
 		if err != nil {
 			w.Write([]byte(fmt.Sprintf(`{
