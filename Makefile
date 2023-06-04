@@ -6,9 +6,13 @@ build:
 	go build -v -o ./bin/abfcli ./cmd/abfcli/
 
 run: build
-	docker compose -f ./deployments/docker-compose.yml up -d
-	./bin/anti-bruteforce
+	docker compose -f ./deployments/docker-compose.yml up -d --build
 
 lint: 
 	golangci-lint run ./...
 
+down:
+	docker compose -f ./deployments/docker-compose.yml down
+
+integration:
+	go test -v ./tests/integration -tags integration

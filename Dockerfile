@@ -1,4 +1,4 @@
-FROM golang:1.19
+FROM ubuntu:20.04
 
 WORKDIR /abf
 
